@@ -9,32 +9,62 @@
 #    Updated: 2022/09/20 14:18:57 by rmallawa         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
-NAME		= libft.a
-CFLAGS	= -Wall -Werror -Wextra -Iincludes -c
-FILES		= $(shell ls | grep -E ".+\.c")
-OBJ			= $(FILES:%.c=%.o)
+# Project file
+NAME = minishell
 
-all: $(NAME)
+# Project builds and dirs
+SRCDIR = ./src/
+SRCNAMES = $(shell ls $(SRCDIR) | grep -E ".+\.c")
+SRC = $(addprefix $(SRCDIR), $(SRCNAMES))
+INC = ./inc/
+BUILDDIR = ./build/
+BUILDOBJS = $(addprefix $(BUILDDIR), $(SRCNAMES:.c=.o))
 
-# This won't run if the .o files don't exist or are not modified
-$(NAME): $(OBJ)
-	@ar rcs $(NAME) $(OBJ)
+# Libft builds and dirs
+LIBDIR = ./libft/
+LIBFT = ./libft/libft.a
+LIBINC = ./libft/includes/
 
-# This won't run if the source files don't exist or are not modified
-$(OBJ): $(FILES)
-	@gcc $(CFLAGS) $(FILES)
+# Optimization and Compiler flags and commands
+CC = gcc
+CFLAGS = -Wall -Werror -Wextra
 
+# Debugging flags
+DEBUG = -g
+
+# Main rule
+all: $(BUILDDIR) $(LIBFT) $(NAME)
+
+# Object dir rule
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
+# Objects rule
+$(BUILDDIR)%.o:$(SRCDIR)%.c
+	$(CC) $(CFLAGS) -I$(LIBINC) -I$(INC) -o $@ -c $<
+
+# Project file rule
+$(NAME): $(BUILDOBJS)
+	$(CC) $(CFLAGS) -o $(NAME) $(BUILDOBJS) $(LIBFT)
+
+# Libft rule
+$(LIBFT):
+	make -C $(LIBDIR)
+
+# Cleaning up the build files
 clean:
-	@rm -f $(OBJ)
+	rm -rf $(BUILDDIR)
+	make -C $(LIBDIR) clean
 
+# Getting rid of the project file
 fclean: clean
-	@rm -f $(NAME)
+	rm -rf $(NAME)
+	make -C $(LIBDIR) fclean
 
+# Do both of the above
 re: fclean all
 
-# I use .PHONY to make sure that gnu make will still run even if files called
-# clean / fclean / all and re already exist in the directory
-.PHONY: clean fclean all re
-
+# Just in case those files exist in the root dir
+.PHONY: all fclean clean re
 
 
